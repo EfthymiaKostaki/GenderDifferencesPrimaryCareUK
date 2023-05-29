@@ -1,0 +1,16 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: Gender Differences in primary care in the UK
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Efthymia
+    family-names: Kostaki
+    email: ek569@jbs.cam.ac.uk
+    affiliation: Student
+    orcid: 'https://orcid.org/0000-0003-2771-9229'
+license: MIT
