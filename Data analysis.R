@@ -23,8 +23,8 @@
   library(sandwich)
   here::here()
   # Set your own working directory here
-  setwd("/Users/efthymiakostaki/Dropbox/EffieStefan/IRP/IRP R")
-  source("fn_shccm.r")
+  setwd("/Users/efthymiakostaki/Dropbox/EffieStefan/IRP/IRP_R")
+  source("fn_shccm.R")
   require(Hmisc)
   require(xtable)
   
@@ -176,11 +176,19 @@ GP_2022<-merge(GP_2022, GP_2022.workforce_composition,by='Practice Code', all.x=
 # need to merge with the Practice codes that were not NA
 names(GP_2022) 
 
-# Calculate proportion of female full time GPs
 GP_2022$`TOTAL_MALE`<- as.numeric(GP_2022$`TOTAL_MALE`)
 GP_2022$`TOTAL_FEMALE`<- as.numeric(GP_2022$`TOTAL_FEMALE`)
-GP_2022$proportion_female_FTE_GPs<- GP_2022$TOTAL_FEMALE/(GP_2022$TOTAL_FEMALE+GP_2022$TOTAL_MALE)
+GP_2022$`TOTAL_PATIENTS`<- as.numeric(GP_2022$`TOTAL_PATIENTS`)
+scatterplot(I(GP_2022$TOTAL_FEMALE+GP_2022$TOTAL_MALE), GP_2022$`TOTAL_PATIENTS`)
+hist(I(GP_2022$`TOTAL_FEMALE`/GP_2022$`TOTAL_PATIENTS`))
+# low variation in the gender of the registered patients for each practice
+
+# Calculate proportion of female full time GPs
+GP_2022$`FEMALE_GP_FTE`<- as.numeric(GP_2022$`FEMALE_GP_FTE`)
+GP_2022$`MALE_GP_FTE`<- as.numeric(GP_2022$`MALE_GP_FTE`)
+GP_2022$proportion_female_FTE_GPs<- GP_2022$MALE_GP_FTE/(GP_2022$MALE_GP_FTE+GP_2022$FEMALE_GP_FTE)
 hist(GP_2022$proportion_female_FTE_GPs)  
+
 
 # Linear regression with workforce composition
 # only with age interaction - no frequency
@@ -790,32 +798,17 @@ shccm(lm_1, "hc3")
 # Save GP_2022 to excel
 write.xlsx(GP_2022, 'GP_2022_Data.xlsx')
 
-## DESCRIPTIVE STATISTICS
-
 # Time to use the margins library
-lm_1<- lm(patient_satisfaction~proportion_of_female_responders, data=GP_2022)
-m <- margins(lm_1)
-summary(m)  
-margins_summary(lm_1)  
-plot(m)
+# lm_1<- lm(patient_satisfaction~proportion_of_female_responders, data=GP_2022)
+# m <- margins(lm_1)
+# summary(m)  
+# margins_summary(lm_1)  
+# plot(m)
 
-cplot(lm_1, "proportion_of_female_responders", what = "effect", main = "Average Marginal Effect of Proportion of female responders")
-cplot(lm_1, "proportion_of_female_responders", what = "prediction", main = "Predicted patient satisfaction, given proportion of female responders")
+# cplot(lm_1, "proportion_of_female_responders", what = "effect", main = "Average Marginal Effect of Proportion of female responders")
+# cplot(lm_1, "proportion_of_female_responders", what = "prediction", main = "Predicted patient satisfaction, given proportion of female responders")
 
-lm_2<- lm(patient_satisfaction~proportion_of_female_responders, data=GP_2022)
-
-plot(x=GP_2022$proportion_of_female_responders, y=GP_2022$patient_satisfaction)
-  
-plot(GP_2022$QOF_Score, GP_2022$patient_satisfaction)
-abline(lm(patient_satisfaction~QOF_Score, data= GP_2022), col = "blue")
-
-plot(GP_2022$proportion_of_female_responders, GP_2022$patient_satisfaction)
-abline(lm(patient_satisfaction~proportion_of_female_responders, data= GP_2022), col = "blue")
-
-summary(lm(patient_satisfaction~proportion_of_female_responders*age_average, data= GP_2022))
-
-plot(GP_2022$proportion_of_female_responders, GP_2022$patient_satisfaction)
-abline(lm(patient_satisfaction~proportion_of_female_responders*age_average, data= GP_2022), col = "blue")
+# lm_2<- lm(patient_satisfaction~proportion_of_female_responders, data=GP_2022)
 
 ## Supervisor comments break QOF score into bins and then conduct multinomial regression
 # Drop outlier- done
@@ -959,6 +952,7 @@ g$layout[grepl("guide", g$layout$name),c("t","b")] <- c(1,nrow(g))
 grid.newpage()
 grid.draw(g)
 p
+
 # Not enough listening
 factors<- lm(patient_satisfaction~proportion_of_female_responders*age_average+
                not_enough_listening*proportion_of_female_responders*proportion_female_FTE_GPs, data=GP_2022)
@@ -1151,15 +1145,16 @@ lm_simple<- lm( proportion_of_female_responders~ TOTAL_PATIENTS+Is_GP_Rural+prac
 shccm(lm_simple,"hc3")
 
 # Extras
-fit <- factanal(GP_2022[, c("patient_appointment_satisfaction",
-                            "last_appointment_late", "not_enough_time","not_enough_listening",
-                            "not_enough_care_concern","not_enough_trust", "needs_not_met")], 3, rotation="varimax")
-print(fit, digits=2, cutoff=.3, sort=TRUE)
-load <- fit$loadings[,c(1,3)]
-plot(load,type="n") # set up plot
-text(load,labels=c("patient_appointment_satisfaction",
-                   "last_appointment_late", "not_enough_time","not_enough_listening",
-                   "not_enough_care_concern","not_enough_trust", "needs_not_met"),cex=.7) # add variable names
+#fit <- factanal(GP_2022[, c("patient_appointment_satisfaction",
+#                            "last_appointment_late", "not_enough_time","not_enough_listening",
+#                            "not_enough_care_concern","not_enough_trust", "needs_not_met")], 3, rotation="varimax")
+#print(fit, digits=2, cutoff=.3, sort=TRUE)
+#load <- fit$loadings[,c(1,3)]
+#plot(load,type="n") # set up plot
+#text(load,labels=c("patient_appointment_satisfaction",
+#                   "last_appointment_late", "not_enough_time","not_enough_listening",
+#                   "not_enough_care_concern","not_enough_trust", "needs_not_met"),cex=.7) # add variable names
+
 
 # compare with registered proportion of females 
 # the results are adjusted to be representative but of course these inconsistencies are natural
@@ -1172,73 +1167,152 @@ names(GP_2022)
 
 hist(GP_2022$age_average,breaks=50)
 
-
-l1<- lm(patient_satisfaction ~not_enough_listening +proportion_of_female_responders+age_average+Is_GP_Rural+low_frequency_visit, data=GP_2022)
-shccm(l1)
-
-hist(GP_2022$patient_appointment_satisfaction)
-
-# Prepare regressions for latex output
+# Prepare regressions for latex output - Hypothesis 1
 l_basic<- lm(patient_satisfaction ~proportion_of_female_responders, data=GP_2022)
+shccm(l_basic, "hc3")
 l_basic_with_age<- lm(patient_satisfaction ~proportion_of_female_responders+age_average, data=GP_2022)
+shccm(l_basic_with_age, "hc3")
+summary(l_basic_with_age)
 l_basic_with_age_rurality<- lm(patient_satisfaction ~proportion_of_female_responders+age_average+Is_GP_Rural, data=GP_2022)
+shccm(l_basic_with_age_rurality, "hc3")
 l_basic_with_age_rurality_frequency<- lm(patient_satisfaction ~proportion_of_female_responders+age_average+Is_GP_Rural+low_frequency_visit, data=GP_2022)
+shccm(l_basic_with_age_rurality_frequency, "hc3")
 
-names(GP_2022)
+# shorten names to use stargazer values
+b1<-l_basic
+b2<- l_basic_with_age
+b3<- l_basic_with_age_rurality
+b4<- l_basic_with_age_rurality_frequency
 
-selm=coeftest(l_basic,
+# names(GP_2022)
+
+selm<-coeftest(l_basic,
               vcov = vcovHC(l_basic,
                             type = "HC3"))[,2]
-selm_age=coeftest(l_basic_with_age,
+
+selm_pval<- coeftest(l_basic,
+                     vcov = vcovHC(l_basic,
+                                   type = "HC3"))[,4]
+
+selm_age<-coeftest(l_basic_with_age,
               vcov = vcovHC(l_basic_with_age,
                             type = "HC3"))[,2]
-selm_age_rurality=coeftest(l_basic_with_age_rurality,
+
+selm_age_pval<- coeftest(l_basic_with_age,
+                     vcov = vcovHC(l_basic_with_age,
+                                   type = "HC3"))[,4]
+
+selm_age_rurality<-coeftest(l_basic_with_age_rurality,
                   vcov = vcovHC(l_basic_with_age_rurality,
                                 type = "HC3"))[,2]
-selm_age_rurality_frequency=coeftest(l_basic_with_age_rurality_frequency,
+
+selm_age_rurality_pval<-coeftest(l_basic_with_age_rurality,
+                            vcov = vcovHC(l_basic_with_age_rurality,
+                                          type = "HC3"))[,4]
+
+selm_age_rurality_frequency<-coeftest(l_basic_with_age_rurality_frequency,
                            vcov = vcovHC(l_basic_with_age_rurality_frequency,
                                          type = "HC3"))[,2]
 
-inputvec=list(selm, selm_age, selm_age_rurality, selm_age_rurality_frequency)
+selm_age_rurality_frequency_pval<-coeftest(l_basic_with_age_rurality_frequency,
+                                      vcov = vcovHC(l_basic_with_age_rurality_frequency,
+                                                    type = "HC3"))[,4]
+
+inputvec<-list(selm, selm_age, selm_age_rurality, selm_age_rurality_frequency)
+inputvec_pval<- list(selm_pval, selm_age_pval, selm_age_rurality_pval, selm_age_rurality_frequency_pval)
+
 # print results nicely in LaTex
-stargazer(l_basic, l_basic_with_age,l_basic_with_age_rurality,l_basic_with_age_rurality_frequency,
+stargazer(b1, b2,b3,b4,
           title="Regression Results",
-          type="latex",
+          type="text",
           dep.var.labels=c("Proportion of Positive Patient Satisfaction"),
           covariate.labels=c("Proportion of Female Responders", "Age average demeaned", "Is GP Rural, 1 if Rural", "Proportion of low frequency patients"),
           object.names = TRUE,
           se=inputvec,
+          p=inputvec_pval,
           align=TRUE,
           no.space=TRUE)
 
-l_basic_with_age_rurality_frequency_gp<- lm(patient_satisfaction ~proportion_of_female_responders*proportion_female_FTE_GPs+age_average+Is_GP_Rural+low_frequency_visit, data=GP_2022)
-shccm(l_basic_with_age_rurality_frequency_gp)
-l_basic_with_age_rurality_frequency_gp_rurality<- lm(patient_satisfaction ~proportion_of_female_responders+age_average+Is_GP_Rural*proportion_female_FTE_GPs+low_frequency_visit, data=GP_2022)
-shccm(l_basic_with_age_rurality_frequency_gp)
+# mediation hypothesis - access - Hypothesis 2
+m1<-lm(patient_satisfaction ~    proportion_of_female_responders+age_average+
+         Is_GP_Rural+
+         low_frequency_visit, data=GP_2022)
 
+selm_mediators_before=coeftest(m1,
+                                         vcov = vcovHC(m1,
+                                                       type = "HC3"))[,2]
+shccm(m1)
+m2<-lm(patient_satisfaction ~       patient_appointment_satisfaction+proportion_of_female_responders+age_average+
+         Is_GP_Rural+
+         low_frequency_visit, data=GP_2022)
 
-selm_age_rurality_frequency_gp=coeftest(l_basic_with_age_rurality_frequency_gp,
-                                     vcov = vcovHC(l_basic_with_age_rurality_frequency_gp,
-                                                   type = "HC3"))[,2]
-selm_age_rurality_frequency_gp_rurality=coeftest(l_basic_with_age_rurality_frequency_gp_rurality,
-                                        vcov = vcovHC(l_basic_with_age_rurality_frequency_gp_rurality,
+selm_mediators_after=coeftest(m2,
+                                        vcov = vcovHC(m2,
                                                       type = "HC3"))[,2]
+shccm(m2)
+m3<-lm(patient_satisfaction ~            patient_appointment_satisfaction+age_average+
+         Is_GP_Rural+
+         low_frequency_visit, data=GP_2022)
+shccm(m3)
+selm_mediators_appointment_satisfaction=coeftest(m3,
+                                                           vcov = vcovHC(m3,
+                                                                         type = "HC3"))[,2]
 
-inputvec1=list(selm_age_rurality_frequency, selm_age_rurality_frequency_gp,selm_age_rurality_frequency_gp_rurality)
-# moderation hypothesis
-stargazer(l_basic_with_age_rurality_frequency,l_basic_with_age_rurality_frequency_gp,selm_age_rurality_frequency_gp_rurality,
-          title="Regression Results",
+m4<-lm(patient_appointment_satisfaction ~
+         proportion_of_female_responders+age_average+
+         Is_GP_Rural+
+         low_frequency_visit, data=GP_2022)
+
+selm_mediators_appointment=coeftest(m4,
+                                              vcov = vcovHC(m4,
+                                                            type = "HC3"))[,2]
+shccm(m4)
+inputvec3=list(selm_mediators_before,selm_mediators_after, selm_mediators_appointment_satisfaction,selm_mediators_appointment)
+
+stargazer(m1,m2,m3,m4,
+          title="Appointment Mediator Results",
+          type="text",
+          #dep.var.labels=c("Proportion of Positive Patient Overall Satisfaction",
+          #                 "Proportion of Positive Patient Satisfaction when making an appointment"),
+          object.names = TRUE,
+          se=inputvec3,
+          align=TRUE,
+          no.space=TRUE)
+
+# moderation hypothesis - Hypothesis 3
+hist(GP_2022$proportion_female_FTE_GPs)
+l1<- lm(patient_satisfaction ~proportion_of_female_responders*proportion_female_FTE_GPs+age_average+Is_GP_Rural+low_frequency_visit, data=GP_2022)
+shccm(l1)
+l2<- lm(patient_satisfaction ~proportion_of_female_responders+age_average+Is_GP_Rural*proportion_female_FTE_GPs+low_frequency_visit, data=GP_2022)
+shccm(l2)
+
+l3<- lm(patient_satisfaction ~proportion_of_female_responders*proportion_female_FTE_GPs+patient_appointment_satisfaction+age_average+Is_GP_Rural+low_frequency_visit, data=GP_2022)
+shccm(l3)
+
+selm_l1=coeftest(l1,
+                                     vcov = vcovHC(l1,
+                                                   type = "HC3"))[,2]
+selm_l2=coeftest(l2,
+                                        vcov = vcovHC(l2,
+                                                      type = "HC3"))[,2]
+selm_l3=coeftest(l3,
+                                                 vcov = vcovHC(l3,
+                                                               type = "HC3"))[,2]
+# model b4 is the basic model
+# coef test list: selm_age_rurality_frequency
+inputvec1=list(selm_age_rurality_frequency,selm_l1,selm_l3, selm_l2)
+
+stargazer(b4,l1,l3,l2,
+          title="Moderation Results",
           type="text",
           dep.var.labels=c("Proportion of Positive Patient Satisfaction"),
-          covariate.labels=c("Proportion of Female Responders", "Proportion Female FTE GPs","Age average demeaned", "Is GP Rural, 1 if Rural", "Proportion of low frequency patients","Proportion of female responders* Proportion female FTE GPs"),
+          covariate.labels=c("Proportion of Female Responders", "Proportion Female FTE GPs","Patient appointment satisfaction", "Age average demeaned", "Is GP Rural, 1 if Rural", "Proportion of low frequency patients","Proportion of female responders* Proportion female FTE GPs", "Is GP Rural*proportion female FTE GPs"),
           object.names = TRUE,
           se=inputvec1,
           align=TRUE,
           no.space=TRUE)
 
-shccm(lm(patient_satisfaction ~proportion_of_female_responders*proportion_female_FTE_GPs*age_average+Is_GP_Rural+low_frequency_visit, data=GP_2022))
-
-# Regression wiith all possible mediators for quality of service
+# Regression with all possible mediators for quality of service
 lm_mediators_with_controls<-lm(patient_satisfaction ~proportion_of_female_responders+age_average+Is_GP_Rural+low_frequency_visit+proportion_of_female_responders*not_enough_care_concern+proportion_of_female_responders*not_enough_listening+proportion_of_female_responders*not_enough_time+proportion_of_female_responders*needs_not_met+proportion_of_female_responders*not_enough_trust, data=GP_2022)
 selm_mediators_with_controls=coeftest(lm_mediators_with_controls,
                                                  vcov = vcovHC(lm_mediators_with_controls,
@@ -1259,58 +1333,7 @@ stargazer(lm_mediators_no_controls,lm_mediators_with_controls,title="Regression 
           no.space=TRUE)
 vif(lm_mediators)
 
-# mediation hypothesis - access
-m1<-lm(patient_satisfaction ~
-                                 proportion_of_female_responders+age_average+
-                                 Is_GP_Rural+
-                                 low_frequency_visit, data=GP_2022)
-
-selm_mediators_listening_before=coeftest(m1,
-                                    vcov = vcovHC(m1,
-                                                  type = "HC3"))[,2]
-
-m2<-lm(patient_satisfaction ~
-                                    patient_appointment_satisfaction+proportion_of_female_responders+age_average+
-                                    Is_GP_Rural+
-                                    low_frequency_visit, data=GP_2022)
-
-selm_mediators_listening_after=coeftest(m2,
-                                         vcov = vcovHC(m2,
-                                                       type = "HC3"))[,2]
-
-m3<-lm(patient_satisfaction ~
-                                         patient_appointment_satisfaction+age_average+
-                                         Is_GP_Rural+
-                                         low_frequency_visit, data=GP_2022)
-
-selm_mediators_listening_appointment_satisfaction=coeftest(m3,
-                                              vcov = vcovHC(m3,
-                                                            type = "HC3"))[,2]
-
-m4<-lm(patient_appointment_satisfaction ~
-                            proportion_of_female_responders+age_average+
-                            Is_GP_Rural+
-                            low_frequency_visit, data=GP_2022)
-
-selm_mediators_listening_appointment=coeftest(m4,
-                                              vcov = vcovHC(m4,
-                                                            type = "HC3"))[,2]
-
-inputvec3=list(selm_mediators_listening_before,selm_mediators_listening_after, selm_mediators_listening_appointment_satisfaction,selm_mediators_listening_appointment)
-
-stargazer(m1,m2,m3,m4,
-          title="Appointment Mediator Results",
-          type="latex",
-          #dep.var.labels=c("Proportion of Positive Patient Overall Satisfaction",
-          #                 "Proportion of Positive Patient Satisfaction when making an appointment"),
-          object.names = TRUE,
-          se=inputvec3,
-          align=TRUE,
-          no.space=TRUE)
-
-shccm(lm_mediators_listening, "hc3")
-
-# mediation hypothesis - quality of service
+# mediation hypothesis - quality of service - Hypothesis 4 (was not added in the final submission)
 m1<-lm(patient_satisfaction ~
          proportion_of_female_responders+age_average+
          Is_GP_Rural+
@@ -1351,55 +1374,6 @@ inputvec3=list(selm_mediators_listening_before,selm_mediators_listening_after, s
 
 stargazer(m1,m2,m3,m4,
           title="Not enough listening Mediator Results",
-          type="latex",
-          #dep.var.labels=c("Proportion of Positive Patient Overall Satisfaction",
-          #                 "Proportion of Positive Patient Satisfaction when making an appointment"),
-          object.names = TRUE,
-          se=inputvec3,
-          align=TRUE,
-          no.space=TRUE)
-
-# mediation hypothesis - quality of service
-m1<-lm(patient_satisfaction ~
-         proportion_of_female_responders+age_average+
-         Is_GP_Rural+
-         low_frequency_visit, data=GP_2022)
-
-selm_mediators_listening_before=coeftest(m1,
-                                         vcov = vcovHC(m1,
-                                                       type = "HC3"))[,2]
-
-m2<-lm(patient_satisfaction ~
-         not_enough_time+proportion_of_female_responders+age_average+
-         Is_GP_Rural+
-         low_frequency_visit, data=GP_2022)
-
-selm_mediators_listening_after=coeftest(m2,
-                                        vcov = vcovHC(m2,
-                                                      type = "HC3"))[,2]
-
-m3<-lm(patient_satisfaction ~
-         not_enough_time+age_average+
-         Is_GP_Rural+
-         low_frequency_visit, data=GP_2022)
-
-selm_mediators_listening_appointment_satisfaction=coeftest(m3,
-                                                           vcov = vcovHC(m3,
-                                                                         type = "HC3"))[,2]
-
-m4<-lm(not_enough_time ~
-         proportion_of_female_responders+age_average+
-         Is_GP_Rural+
-         low_frequency_visit, data=GP_2022)
-
-selm_mediators_listening_appointment=coeftest(m4,
-                                              vcov = vcovHC(m4,
-                                                            type = "HC3"))[,2]
-
-inputvec3=list(selm_mediators_listening_before,selm_mediators_listening_after, selm_mediators_listening_appointment_satisfaction,selm_mediators_listening_appointment)
-
-stargazer(m1,m2,m3,m4,
-          title="Not enough listening Mediator Results",
           type="text",
           #dep.var.labels=c("Proportion of Positive Patient Overall Satisfaction",
           #                 "Proportion of Positive Patient Satisfaction when making an appointment"),
@@ -1408,10 +1382,11 @@ stargazer(m1,m2,m3,m4,
           align=TRUE,
           no.space=TRUE)
 
+
 # Descriptive statistics
 plot(GP_2022$age_average, GP_2022$patient_satisfaction)
 
-describe(subset(GP_2022, select=c("proportion_of_female_responders", 
+describeBy(subset(GP_2022, select=c("proportion_of_female_responders", 
                                   "patient_satisfaction", "Female", 
                                   "age_average",
                                   "male_gp_average_age",
@@ -1424,7 +1399,8 @@ describe(subset(GP_2022, select=c("proportion_of_female_responders",
 hist(GP_2022$proportion_of_female_responders)
 hist(GP_2022$patient_satisfaction)
 
-
+quantile(GP_2022$proportion_female_FTE_GPs, probs=seq(0,1,0.05),  na.rm=TRUE)
+hist(GP_2022$proportion_female_FTE_GPs)
 apply(GP_2022[,c("proportion_of_female_responders", 
                  "patient_satisfaction", "Female", 
                  "age_average",
