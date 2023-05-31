@@ -849,7 +849,7 @@ plot(GP_2022$QOF_Score_bins_int, GP_2022$patient_satisfaction)
 abline(lm(patient_satisfaction~QOF_Score_bins_int, data= GP_2022), col = "blue")
 
 
-## Tom's comment run regression to understand how each factor explains patient satisfaction
+## run regression to understand how each factor explains patient satisfaction
 ggpairs(GP_2022[,c("proportion_of_female_responders", 
                    "patient_satisfaction", 
                    "proportion_female_FTE_GPs", 
